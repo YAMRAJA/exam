@@ -1,0 +1,8 @@
+body: Full-screen background (gradient or image), display: flex, justify-content: center, align-items: center, min-height: 100vh.
+.login-card: background-color, padding, border-radius, box-shadow, text-align: center.
+.input-group: margin-bottom, display: flex, align-items: center.
+.input-group i: Icon styling.
+.input-group input: width: 100%, padding, border, border-radius.
+.btn: Basic button styles, padding, border-radius, cursor: pointer.
+.primary-btn: Brand color.
+.secondary-btn: Outline or lighter version for admin.
