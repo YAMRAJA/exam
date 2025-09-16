@@ -1,31 +1,710 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - MCQ App</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>School Portal — HTML UI</title>
+  <meta name="description" content="Demo School Portal UI (single HTML file). Mock auth, roles, quizzes, messages, Odia language toggle." />
+  <style>
+    /* Basic Reset */
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg-1:#eef2ff; --bg-2:#ffffff;
+      --card:#ffffff; --muted:#6b7280; --accent:#5b21b6;
+      --glass: rgba(255,255,255,0.65);
+      --radius:14px;
+    }
+    [data-theme="dark"]{
+      --bg-1:#0f172a; --bg-2:#0b1220;
+      --card:#0b1220; --muted:#94a3b8; --accent:#7c3aed;
+      --glass: rgba(10,12,20,0.6);
+    }
+    body{
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(160deg,var(--bg-1),var(--bg-2));
+      min-height:100vh;color:var(--muted);-webkit-font-smoothing:antialiased;
+      padding:20px;
+    }
+
+    /* Layout */
+    .app{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:start;}
+    @media (max-width:900px){ .app{grid-template-columns:1fr} .sidenav{display:none} }
+
+    .card{background:var(--glass);backdrop-filter: blur(6px);border-radius:var(--radius);padding:14px;border:1px solid rgba(0,0,0,0.04)}
+    .sidenav{padding:16px;height:calc(100vh - 40px);position:sticky;top:20px}
+    .logo{display:flex;gap:10px;align-items:center;margin-bottom:18px}
+    .logo .mark{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ef4444);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .nav{display:flex;flex-direction:column;gap:8px}
+    .nav button{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;color:inherit;cursor:pointer;text-align:left}
+    .nav button:hover{background:rgba(0,0,0,0.04)}
+    .nav .active{background:linear-gradient(90deg,rgba(123,104,238,0.12),rgba(99,102,241,0.06));font-weight:600}
+
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;margin-bottom:12px;border-radius:12px}
+    .search{flex:1;display:flex;gap:8px;align-items:center}
+    .search input{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:transparent;color:inherit}
+
+    .row{display:flex;gap:12px;align-items:stretch}
+    .col-2{display:grid;grid-template-columns:1fr 360px;gap:12px}
+    @media (max-width:900px){ .col-2{grid-template-columns:1fr} }
+
+    h1{font-size:18px;color:var(--accent);font-weight:700}
+    h2{font-size:16px;color:inherit;margin-bottom:8px}
+
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media (max-width:900px){ .stats{grid-template-columns:repeat(1,1fr)} }
+
+    .stat{padding:12px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.3));border:1px solid rgba(0,0,0,0.04)}
+    .muted{color:var(--muted);font-size:13px}
+    .big{font-size:22px;font-weight:700;color:var(--accent)}
+
+    .list{display:flex;flex-direction:column;gap:8px}
+    .list-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:rgba(0,0,0,0.02)}
+    .btn{padding:8px 12px;border-radius:9px;border:none;cursor:pointer}
+    .btn.primary{background:var(--accent);color:white}
+    .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+
+    /* forms */
+    label{display:block;font-size:13px;margin-bottom:6px}
+    input,select,textarea{padding:10px;border-radius:9px;border:1px solid rgba(0,0,0,0.06);width:100%;background:transparent;color:inherit}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* quiz tiles */
+    .quiz-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media (max-width:900px){ .quiz-grid{grid-template-columns:1fr} }
+    .quiz{padding:12px;border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,0.8),rgba(255,255,255,0.6));border:1px solid rgba(0,0,0,0.03)}
+
+    /* messenger */
+    .messages{display:flex;flex-direction:column;height:360px;border-radius:10px;overflow:hidden}
+    .msg-list{flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+    .msg{max-width:75%;padding:8px 10px;border-radius:10px}
+    .from-teacher{background:linear-gradient(90deg,rgba(99,102,241,0.12),rgba(99,102,241,0.06));align-self:flex-start}
+    .from-parent{background:rgba(210,210,210,0.12);align-self:flex-end}
+
+    /* small utilities */
+    .flex{display:flex;gap:10px;align-items:center}
+    .right{margin-left:auto}
+    footer{margin-top:14px;text-align:center;font-size:12px;color:var(--muted)}
+    .kbd{font-family:monospace;background:rgba(0,0,0,0.03);padding:2px 6px;border-radius:6px;font-size:12px}
+
+    /* accessibility focus */
+    button:focus,input:focus,select:focus,textarea:focus{outline:3px solid rgba(99,102,241,0.16);outline-offset:2px}
+
+    /* tiny avatar */
+    .avatar{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ef4444);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+
+    /* login modal */
+    .modal{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:999}
+    .modal .card{width:420px}
+    @media (max-width:460px){ .modal .card{width:100%} }
+  </style>
 </head>
-<body>
-    <div class="container">
-        <div class="login-card">
-            <h2>Welcome Back!</h2>
-            <form id="loginForm">
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="email" id="email" placeholder="Email" required>
-                </div>
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password" placeholder="Password" required>
-                </div>
-                <button type="submit" class="btn primary-btn">Login</button>
-                <button type="button" id="adminLoginBtn" class="btn secondary-btn">Admin Login</button>
-                <p class="signup-link">Don't have an account? <a href="register.html">Sign Up</a></p>
-            </form>
+<body data-theme="light">
+  <div id="app" class="app" aria-live="polite">
+
+    <!-- LEFT NAV -->
+    <aside class="sidenav card" role="navigation" aria-label="Main navigation">
+      <div class="logo">
+        <div class="mark">SP</div>
+        <div>
+          <div style="font-weight:700;color:var(--accent)">School Portal</div>
+          <div class="small">Demo UI • Local only</div>
         </div>
+      </div>
+
+      <div id="userBox" style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+        <div class="avatar" id="userAvatar">G</div>
+        <div>
+          <div id="userName" style="font-weight:600">Guest</div>
+          <div id="userRole" class="small">student</div>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button data-view="home" class="active" aria-pressed="true">🏠 Dashboard</button>
+        <button data-view="quizzes">📚 Quizzes</button>
+        <button data-view="subjects">📘 Subjects</button>
+        <button data-view="students">👩‍🎓 Students</button>
+        <button data-view="messages">💬 Messages</button>
+        <button data-view="analytics">📊 Analytics</button>
+        <button data-view="settings">⚙️ Settings</button>
+      </nav>
+
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button id="themeToggle" class="btn ghost" title="Toggle theme">🌙</button>
+        <select id="langSwitch" aria-label="Language toggle">
+          <option value="en">English</option>
+          <option value="od">ଓଡ଼ିଆ</option>
+        </select>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="small" style="margin-bottom:6px">Account</div>
+        <button id="openLogin" class="btn primary" style="width:100%">Login / Switch</button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main style="min-height:500px">
+      <div class="topbar card" role="banner" aria-label="Top bar">
+        <div style="display:flex;flex-direction:column">
+          <h1 id="welcomeTitle">Welcome, Guest</h1>
+          <div class="small">Role: <span id="topRole">student</span></div>
+        </div>
+
+        <div class="flex" role="group" aria-label="Notices and actions">
+          <div class="small" id="noticeCount">No notices</div>
+          <button id="newNotice" class="btn ghost" title="Create quick notice">+ Notice</button>
+        </div>
+      </div>
+
+      <div id="mainView">
+        <!-- HOME -->
+        <section id="home" class="card" aria-labelledby="homeTitle">
+          <div class="row" style="justify-content:space-between;align-items:flex-start">
+            <div style="flex:1">
+              <h2 id="homeTitle">Dashboard</h2>
+              <p class="small">Overview of quizzes, students and more.</p>
+
+              <div style="margin-top:12px" class="stats" id="statsWrap">
+                <div class="stat">
+                  <div class="muted">Quizzes</div>
+                  <div class="big" id="statQuizzes">0</div>
+                </div>
+                <div class="stat">
+                  <div class="muted">Students</div>
+                  <div class="big" id="statStudents">0</div>
+                </div>
+                <div class="stat">
+                  <div class="muted">Teachers</div>
+                  <div class="big" id="statTeachers">0</div>
+                </div>
+              </div>
+
+              <div style="margin-top:12px" class="col-2">
+                <div>
+                  <h2>Recent Quizzes</h2>
+                  <div id="recentQuizzes" class="list" aria-live="polite"></div>
+                </div>
+
+                <aside class="card">
+                  <h2 style="margin-bottom:6px">Quick Quiz Builder</h2>
+                  <div>
+                    <label>Title<input id="qbTitle" placeholder="Quiz title"></label>
+                    <label>Subject<input id="qbSubject" placeholder="Subject"></label>
+                    <div style="display:flex;gap:8px;margin-top:8px">
+                      <button id="addQBQuestion" class="btn ghost">+ Q</button>
+                      <button id="saveQB" class="btn primary">Save Quiz</button>
+                    </div>
+                    <div id="qbQuestions" style="margin-top:8px" class="small muted">No questions yet</div>
+                  </div>
+                </aside>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        <!-- QUIZZES -->
+        <section id="quizzes" class="card" style="display:none">
+          <h2>Quizzes</h2>
+          <div style="margin-top:12px" class="quiz-grid" id="quizGrid"></div>
+        </section>
+
+        <!-- SUBJECTS -->
+        <section id="subjects" class="card" style="display:none">
+          <h2>Subjects & Classes</h2>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px" id="subjectGrid"></div>
+        </section>
+
+        <!-- STUDENTS -->
+        <section id="students" class="card" style="display:none">
+          <h2>Students</h2>
+          <div id="studentGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px"></div>
+        </section>
+
+        <!-- MESSAGES -->
+        <section id="messages" class="card" style="display:none">
+          <h2>Messages</h2>
+          <div class="messages">
+            <div class="msg-list" id="msgList" role="log" aria-live="polite"></div>
+            <div style="padding:8px;display:flex;gap:8px">
+              <input id="msgInput" placeholder="Type a message" aria-label="Message input">
+              <button id="sendMsg" class="btn primary">Send</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ANALYTICS -->
+        <section id="analytics" class="card" style="display:none">
+          <h2>Analytics</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+            <div class="card" style="padding:12px">Charts placeholder — integrate Chart.js / Recharts later.</div>
+            <div class="card" style="padding:12px">Summary cards</div>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="settings" class="card" style="display:none">
+          <h2>Settings</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+            <div>
+              <label>Full name<input id="accName" placeholder="Your name"></label>
+              <label style="margin-top:8px">Role
+                <select id="accRole">
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="admin">Admin</option>
+                  <option value="parent">Parent</option>
+                </select>
+              </label>
+              <div style="margin-top:8px">
+                <button id="saveAcc" class="btn primary">Save</button>
+              </div>
+            </div>
+            <div>
+              <div class="small">Localization</div>
+              <div style="margin-top:8px">
+                <label>Language<select id="settingsLang"><option value="en">English</option><option value="od">Odia</option></select></label>
+              </div>
+              <div style="margin-top:12px">
+                <label>Theme<select id="settingsTheme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <footer>© <span id="year"></span> School Portal UI — demo</footer>
+    </main>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-label="Login dialog">
+    <div class="card">
+      <h2 style="margin-bottom:8px">Login / Switch User</h2>
+      <div style="display:grid;gap:8px">
+        <label>Name<input id="loginName" placeholder="Your name"></label>
+        <label>Role
+          <select id="loginRole">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+            <option value="parent">Parent</option>
+          </select>
+        </label>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="loginCancel" class="btn ghost">Cancel</button>
+          <button id="loginSave" class="btn primary">Save</button>
+        </div>
+      </div>
     </div>
-    <script src="js/script.js"></script>
+  </div>
+
+<script>
+/* ========= App State & Utilities ========= */
+const LOCALES = {
+  en:{
+    welcome:"Welcome",
+    dashboard:"Dashboard",
+    quizzes:"Quizzes",
+    subjects:"Subjects",
+    students:"Students",
+    messages:"Messages",
+    createQuiz:"Create Quiz",
+    takeQuiz:"Take Quiz",
+    results:"Results",
+    notices:"Notices",
+    profile:"Profile",
+    attendance:"Attendance",
+    grades:"Grades",
+    settings:"Settings",
+    login:"Login",
+    logout:"Logout",
+    noNotices:"No notices",
+    recentQuizzes:"Recent Quizzes",
+  },
+  od:{
+    welcome:"ସ୍ଵାଗତ",
+    dashboard:"ଡ୍ୟାଶବୋର୍ଡ",
+    quizzes:"ପରୀକ୍ଷା",
+    subjects:"ବିଷୟ",
+    students:"ଛାତ୍ରଛାତ୍ରୀ",
+    messages:"ସନ୍ଦେଶ",
+    createQuiz:"ପରୀକ୍ଷା ବନାନ୍ତୁ",
+    takeQuiz:"ପରୀକ୍ଷା ଦିଅନ୍ତୁ",
+    results:"ପରିଣାମ",
+    notices:"ସୂଚନା",
+    profile:"ପ୍ରୋଫାଇଲ୍",
+    attendance:"ହାଜିରା",
+    grades:"ଗ୍ରେଡ୍",
+    settings:"ସେଟିଂସ୍",
+    login:"ଲଗଇନ୍",
+    logout:"ଲଗଅଉଟ୍",
+    noNotices:"ସୂଚନା ନାହିଁ",
+    recentQuizzes:"ସাম্প୍ରତିକ ପରୀକ୍ଷାଗୁଡିକ",
+  }
+};
+
+const defaultData = {
+  quizzes: [
+    { id:"q1", title:"Math Basics", subject:"Mathematics", duration:10, questions:[
+      { text:"2+2?", options:["3","4","5"], answer:1 },
+      { text:"5-2?", options:["2","3","4"], answer:1 },
+    ]},
+  ],
+  students: [{id:"s1",name:"Anjali"},{id:"s2",name:"Rohan"}],
+  teachers: [{id:"t1",name:"Mr. Das"}],
+  notices: [{id:1,text:"Annual day on Oct 10"}],
+  messages: [{from:"teacher",text:"Please submit homework"},{from:"parent",text:"Received, thanks"}],
+};
+
+let state = {
+  locale: localStorage.getItem("locale") || "en",
+  theme: localStorage.getItem("theme") || "light",
+  user: JSON.parse(localStorage.getItem("user")) || {name:"Guest", role:"student"},
+  data: JSON.parse(localStorage.getItem("school_data")) || defaultData,
+  view: "home"
+};
+
+function persist(){
+  localStorage.setItem("locale", state.locale);
+  localStorage.setItem("theme", state.theme);
+  localStorage.setItem("user", JSON.stringify(state.user));
+  localStorage.setItem("school_data", JSON.stringify(state.data));
+}
+
+/* ========= DOM refs ========= */
+const root = document.getElementById("app");
+const nav = document.getElementById("nav");
+const sections = ["home","quizzes","subjects","students","messages","analytics","settings"];
+const nodes = Object.fromEntries(sections.map(s=>[s,document.getElementById(s)]));
+const welcomeTitle = document.getElementById("welcomeTitle");
+const userNameNode = document.getElementById("userName");
+const userRoleNode = document.getElementById("userRole");
+const userAvatar = document.getElementById("userAvatar");
+const topRole = document.getElementById("topRole");
+const statQuizzes = document.getElementById("statQuizzes");
+const statStudents = document.getElementById("statStudents");
+const statTeachers = document.getElementById("statTeachers");
+const recentQuizzes = document.getElementById("recentQuizzes");
+const quizGrid = document.getElementById("quizGrid");
+const subjectGrid = document.getElementById("subjectGrid");
+const studentGrid = document.getElementById("studentGrid");
+const msgList = document.getElementById("msgList");
+const msgInput = document.getElementById("msgInput");
+const noticeCount = document.getElementById("noticeCount");
+const qbQuestions = document.getElementById("qbQuestions");
+const qbTitle = document.getElementById("qbTitle");
+const qbSubject = document.getElementById("qbSubject");
+const addQBQuestion = document.getElementById("addQBQuestion");
+const saveQB = document.getElementById("saveQB");
+const loginModal = document.getElementById("loginModal");
+const openLogin = document.getElementById("openLogin");
+const loginName = document.getElementById("loginName");
+const loginRole = document.getElementById("loginRole");
+const loginSave = document.getElementById("loginSave");
+const loginCancel = document.getElementById("loginCancel");
+const langSwitch = document.getElementById("langSwitch");
+const themeToggle = document.getElementById("themeToggle");
+const settingsLang = document.getElementById("settingsLang");
+const settingsTheme = document.getElementById("settingsTheme");
+const accName = document.getElementById("accName");
+const accRole = document.getElementById("accRole");
+const saveAcc = document.getElementById("saveAcc");
+const sendMsg = document.getElementById("sendMsg");
+const yearNode = document.getElementById("year");
+const newNoticeBtn = document.getElementById("newNotice");
+
+/* ========= Initialization ========= */
+function init(){
+  // set UI values
+  document.documentElement.setAttribute("data-theme", state.theme);
+  langSwitch.value = state.locale;
+  settingsLang.value = state.locale;
+  settingsTheme.value = state.theme;
+  userNameNode.textContent = state.user.name;
+  userRoleNode.textContent = state.user.role;
+  userAvatar.textContent = (state.user.name||"G").split(" ").map(s=>s[0]).slice(0,2).join("");
+  topRole.textContent = state.user.role;
+  yearNode.textContent = new Date().getFullYear();
+
+  // populate nav
+  Array.from(nav.querySelectorAll("button")).forEach(btn=>{
+    btn.addEventListener("click", ()=>{ setView(btn.dataset.view) });
+  });
+
+  // theme toggle
+  themeToggle.onclick = ()=>{ state.theme = state.theme==="light"?"dark":"light"; document.documentElement.setAttribute("data-theme", state.theme); settingsTheme.value = state.theme; persist(); }
+
+  langSwitch.onchange = ()=>{ state.locale = langSwitch.value; settingsLang.value = state.locale; renderAll(); persist(); }
+  settingsLang.onchange = ()=>{ state.locale = settingsLang.value; langSwitch.value = state.locale; renderAll(); persist(); }
+  settingsTheme.onchange = ()=>{ state.theme = settingsTheme.value; document.documentElement.setAttribute("data-theme", state.theme); persist(); }
+
+  openLogin.onclick = ()=>{ loginModal.style.display = "flex"; loginName.value = state.user.name; loginRole.value = state.user.role; }
+  loginCancel.onclick = ()=>{ loginModal.style.display = "none"; }
+  loginSave.onclick = ()=>{ state.user.name = loginName.value || "Guest"; state.user.role = loginRole.value; loginModal.style.display="none"; updateUserInfo(); persist(); renderAll(); }
+
+  saveAcc.onclick = ()=>{ state.user.name = accName.value || state.user.name; state.user.role = accRole.value; updateUserInfo(); persist(); renderAll(); }
+
+  // quick builder
+  let quickQs = [];
+  addQBQuestion.onclick = ()=>{
+    quickQs.push({ text:"New question", options:["A","B","C"], answer:0 });
+    renderQB();
+  };
+  saveQB.onclick = ()=>{
+    const title = qbTitle.value.trim();
+    if(!title){ alert("Add a title"); return; }
+    const q = {
+      id: 'q'+Date.now(),
+      title,
+      subject: qbSubject.value || "General",
+      duration: 10,
+      questions: quickQs.length?quickQs:[{text:"Sample Q",options:["A","B","C"],answer:0}]
+    };
+    state.data.quizzes.unshift(q); quickQs=[]; qbTitle.value=''; qbSubject.value=''; renderAll(); persist();
+    alert("Saved quiz");
+  };
+
+  sendMsg.onclick = ()=>{ const txt = msgInput.value.trim(); if(!txt) return; state.data.messages.push({from:state.user.role,text:txt}); msgInput.value=''; renderMessages(); persist(); }
+  msgInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); sendMsg.click(); }});
+
+  document.getElementById("saveQB").addEventListener("keydown", (e)=>{ if(e.key==="Enter") e.preventDefault(); });
+
+  newNoticeBtn.onclick = ()=>{
+    const text = prompt("Type notice text");
+    if(text){ state.data.notices.push({id:Date.now(),text}); renderNotices(); persist(); }
+  };
+
+  // account settings defaults
+  accName.value = state.user.name;
+  accRole.value = state.user.role;
+
+  // initial render
+  renderAll();
+}
+
+function updateUserInfo(){
+  userNameNode.textContent = state.user.name;
+  userRoleNode.textContent = state.user.role;
+  userAvatar.textContent = (state.user.name||"G").split(" ").map(s=>s[0]).slice(0,2).join("");
+  topRole.textContent = state.user.role;
+  accName.value = state.user.name;
+  accRole.value = state.user.role;
+}
+
+/* ========= Render helpers ========= */
+
+function setView(v){
+  state.view = v;
+  persist();
+  Array.from(nav.querySelectorAll("button")).forEach(b=>{
+    b.classList.toggle("active", b.dataset.view===v);
+    b.setAttribute("aria-pressed", b.dataset.view===v);
+  });
+  sections.forEach(s=> nodes[s].style.display = s===v? "block":"none");
+  // if switching to quizzes view, ensure data loaded
+  renderAll();
+}
+
+function renderAll(){
+  const t = LOCALES[state.locale] || LOCALES.en;
+  welcomeTitle.textContent = `${t.welcome}, ${state.user.name}`;
+  document.title = `${t.dashboard} • School Portal`;
+  renderStats();
+  renderRecent();
+  renderQuizzes();
+  renderSubjects();
+  renderStudents();
+  renderMessages();
+  renderNotices();
+  renderQB();
+  // localize some labels (simple)
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.dataset.i18n;
+    el.innerText = t[key] || el.innerText;
+  });
+}
+
+function renderStats(){
+  statQuizzes.textContent = state.data.quizzes.length;
+  statStudents.textContent = state.data.students.length;
+  statTeachers.textContent = state.data.teachers.length;
+}
+
+function renderRecent(){
+  recentQuizzes.innerHTML = "";
+  state.data.quizzes.slice(0,5).forEach(q=>{
+    const div = document.createElement("div");
+    div.className = "list-item";
+    div.innerHTML = `<div style="min-width:0">
+      <div style="font-weight:600">${q.title}</div>
+      <div class="small muted">${q.subject} • ${q.questions.length} Qs</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn ghost" data-id="${q.id}" onclick="viewQuiz('${q.id}')">View</button>
+      <button class="btn primary" onclick="startQuiz('${q.id}')">Take</button>
+    </div>`;
+    recentQuizzes.appendChild(div);
+  });
+}
+
+function renderQuizzes(){
+  quizGrid.innerHTML = "";
+  state.data.quizzes.forEach(q=>{
+    const d = document.createElement("div");
+    d.className = "quiz";
+    d.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:700">${q.title}</div>
+        <div class="small muted">${q.subject}</div>
+      </div>
+      <div class="small muted">${q.duration}m</div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn ghost" onclick="viewQuiz('${q.id}')">Details</button>
+      <button class="btn primary" onclick="startQuiz('${q.id}')">Take Quiz</button>
+    </div>`;
+    quizGrid.appendChild(d);
+  });
+}
+
+function renderSubjects(){
+  subjectGrid.innerHTML = "";
+  const subjects = ["Mathematics","Science","Odia","English","Social"];
+  subjects.forEach(s=>{
+    const el = document.createElement("div");
+    el.className = "card";
+    el.style.padding = "12px";
+    el.innerHTML = `<div style="font-weight:700">${s}</div><div class="small muted" style="margin-top:6px">Assigned teacher: Mr. Das</div>
+      <div style="margin-top:8px;display:flex;gap:8px"><button class="btn ghost">Manage</button><button class="btn primary">Create Quiz</button></div>`;
+    subjectGrid.appendChild(el);
+  });
+}
+
+function renderStudents(){
+  studentGrid.innerHTML = "";
+  state.data.students.forEach(s=>{
+    const el = document.createElement("div");
+    el.className = "card";
+    el.style.padding="12px";
+    el.innerHTML = `<div style="display:flex;gap:8px;align-items:center">
+      <div class="avatar">${(s.name||'S').split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
+      <div><div style="font-weight:700">${s.name}</div><div class="small muted">Grade 7</div></div>
+      <div class="right"><button class="btn ghost">Profile</button><button class="btn primary">Grades</button></div>
+    </div>`;
+    studentGrid.appendChild(el);
+  });
+}
+
+function renderMessages(){
+  msgList.innerHTML = "";
+  state.data.messages.forEach(m=>{
+    const el = document.createElement("div");
+    el.className = "msg " + (m.from==="teacher" ? "from-teacher" : "from-parent");
+    el.innerText = m.text;
+    msgList.appendChild(el);
+  });
+  msgList.scrollTop = msgList.scrollHeight;
+}
+
+function renderNotices(){
+  noticeCount.textContent = state.data.notices.length ? `${state.data.notices.length} notices` : LOCALES[state.locale].noNotices;
+}
+
+function renderQB(){
+  const node = qbQuestions;
+  // we store temp builder questions in a hidden property to keep examples simple:
+  // but here just show instructions if not built
+  node.innerHTML = "<div class='small muted'>Click +Q to add sample questions, set title and Save Quiz.</div>";
+}
+
+/* ========= Quiz interactions ========= */
+window.viewQuiz = function(id){
+  const q = state.data.quizzes.find(x=>x.id===id);
+  if(!q) return alert("Not found");
+  alert(`Quiz: ${q.title}\nSubject: ${q.subject}\nQuestions: ${q.questions.length}`);
+};
+
+window.startQuiz = function(id){
+  const q = state.data.quizzes.find(x=>x.id===id);
+  if(!q) return alert("Not found");
+  // Simple modal-ish in-page quiz flow:
+  openQuizPlayer(q);
+};
+
+function openQuizPlayer(quiz){
+  // build a quick player overlay
+  const overlay = document.createElement("div");
+  overlay.className = "modal";
+  overlay.style.zIndex = 2000;
+  overlay.innerHTML = `<div class="card" style="width:760px;max-width:100%;padding:16px">
+    <h3 style="margin-bottom:6px">${quiz.title} — ${quiz.subject}</h3>
+    <div id="qpHolder" style="max-height:420px;overflow:auto"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button id="qpPrev" class="btn ghost">Previous</button>
+      <button id="qpNext" class="btn ghost">Next</button>
+      <div class="right"><button id="qpSubmit" class="btn primary">Submit</button></div>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+
+  let idx = 0, answers = {};
+  const holder = overlay.querySelector("#qpHolder");
+  function renderQ(){
+    const q = quiz.questions[idx];
+    holder.innerHTML = `<div>
+      <div style="font-weight:700">Q${idx+1}. ${q.text}</div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+        ${q.options.map((opt,i)=>`<button class="btn" data-i="${i}" style="text-align:left">${opt}</button>`).join('')}
+      </div>
+    </div>`;
+    holder.querySelectorAll("button[data-i]").forEach(b=>{
+      b.onclick = ()=>{ answers[idx]=Number(b.dataset.i); // mark selected
+        // highlight selection
+        holder.querySelectorAll("button[data-i]").forEach(x=>x.style.background=""); b.style.background="rgba(99,102,241,0.12)";
+      };
+      // restore if answer exists
+      if(answers[idx]!==undefined){
+        const sel = holder.querySelector(`button[data-i="${answers[idx]}"]`);
+        if(sel) sel.style.background="rgba(99,102,241,0.12)";
+      }
+    });
+  }
+  renderQ();
+
+  overlay.querySelector("#qpPrev").onclick = ()=>{ if(idx>0){ idx--; renderQ(); }};
+  overlay.querySelector("#qpNext").onclick = ()=>{ if(idx<quiz.questions.length-1){ idx++; renderQ(); }};
+  overlay.querySelector("#qpSubmit").onclick = ()=>{
+    // score
+    let score = 0;
+    quiz.questions.forEach((q,i)=>{ if(answers[i]===q.answer) score++; });
+    alert(`Score: ${score}/${quiz.questions.length}`);
+    document.body.removeChild(overlay);
+  };
+  // close on backdrop click
+  overlay.onclick = (e)=>{ if(e.target===overlay){ document.body.removeChild(overlay); } };
+}
+
+/* ========= Messages and notices sample ========= */
+
+function renderNoticesAndMessagesOnStart(){
+  // ensures there's at least one notice
+  if(!state.data.notices || !state.data.notices.length) state.data.notices = defaultData.notices;
+}
+
+/* ========= Boot ========= */
+renderNoticesAndMessagesOnStart();
+init();
+setView(state.view || "home");
+renderAll();
+persist();
+
+/* Expose state for debugging (dev only) */
+window.__SP = { state, persist };
+
+</script>
 </body>
 </html>
